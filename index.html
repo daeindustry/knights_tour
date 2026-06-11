@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Knight's Tour</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>♞ Knight's <span>Tour</span></h1>
+    <div class="stats">
+      <div class="stat">Size<b id="sizeLbl">6×6</b></div>
+      <div class="stat">Move<b id="moveNum">0</b>/<span id="totalLbl">36</span></div>
+      <div class="stat">Time<b id="timer">0:00</b></div>
+      <div class="stat">Best<b id="best">—</b></div>
+    </div>
+  </header>
+
+  <main>
+    <div class="boardWrap">
+      <div id="board" class="board" aria-label="Chess board"></div>
+    </div>
+    <aside>
+      <label for="size">Board size</label>
+      <select id="size">
+        <option value="5">5 × 5  (25 squares)</option>
+        <option value="6" selected>6 × 6  (36 squares)</option>
+        <option value="7">7 × 7  (49 squares)</option>
+        <option value="8">8 × 8  (64 squares)</option>
+        <option value="9">9 × 9  (81 squares)</option>
+        <option value="10">10 × 10 (100 squares)</option>
+        <option value="10">11 × 11 (121 squares)</option>
+        <option value="10">12 × 12 (144 squares)</option>
+      </select>
+
+      <label for="mode">Difficulty (hint mode)</label>
+      <select id="mode">
+        <option value="hints">Easy — show legal moves</option>
+        <option value="warnsdorff">Medium — Warnsdorff order</option>
+        <option value="none">Hard — no hints</option>
+      </select>
+
+      <button id="newBtn" class="primary">New Game</button>
+      <button id="undoBtn">Undo Move</button>
+      <button id="solveBtn">Auto-Solve from Here</button>
+      <button id="resetBest" class="danger">Reset Best (this size)</button>
+      <hr style="border-color:#334155;width:100%"/>
+      <div style="font-size:.82rem;color:var(--muted);line-height:1.5">
+        <b style="color:var(--ink)">How to play</b><br/>
+        Click any square to place the knight, then jump in L-shapes (2+1).
+        Visit every square exactly once to win.
+        <br/><br/>
+        <b style="color:var(--ink)">Keys</b> — <kbd>Z</kbd> undo • <kbd>N</kbd> new
+      </div>
+    </aside>
+  </main>
+  <footer>Self-hosted single-file build • drop into Apache <code>htdocs</code> as <code>index.html</code></footer>
+</div>
+<div id="toast" class="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

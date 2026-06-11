@@ -1,124 +1,6 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Knight's Tour</title>
-<style>
-  :root{
-    --bg:#0f172a; --panel:#1e293b; --ink:#e2e8f0; --muted:#94a3b8;
-    --light:#f1d9b5; --dark:#b58863; --hint:#22c55e; --hintRing:rgba(34,197,94,.55);
-    --visited:#64748b; --knight:#facc15; --danger:#ef4444; --accent:#38bdf8;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-  .wrap{max-width:1020px;margin:0 auto;padding:18px}
-  header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
-  h1{margin:0;font-size:1.4rem;letter-spacing:.5px}
-  h1 span{color:var(--accent)}
-  .stats{display:flex;gap:14px;flex-wrap:wrap}
-  .stat{background:var(--panel);padding:8px 12px;border-radius:10px;font-size:.85rem}
-  .stat b{color:var(--accent);margin-left:6px}
-  main{display:grid;grid-template-columns:1fr 280px;gap:18px;margin-top:14px}
-  @media (max-width:820px){ main{grid-template-columns:1fr} }
-  .boardWrap{background:var(--panel);padding:14px;border-radius:14px}
-  .board{display:grid;aspect-ratio:1/1;border:3px solid #0b1220;
-    border-radius:8px;overflow:hidden;user-select:none;width:100%}
-  .cell{position:relative;display:flex;align-items:center;justify-content:center;
-    cursor:pointer;transition:background .15s;aspect-ratio:1/1;min-width:0;min-height:0}
-  .cell.light{background:var(--light)} .cell.dark{background:var(--dark)}
-  .cell.visited::after{
-    content:"";position:absolute;top:50%;left:50%;width:64%;aspect-ratio:1/1;
-    transform:translate(-50%,-50%);border-radius:50%;
-    background:rgba(15,23,42,.55);box-shadow:inset 0 0 0 2px rgba(255,255,255,.15);
-    pointer-events:none;
-  }
-  .cell.visited .num{position:relative;z-index:2;color:#fff;font-weight:700;
-    text-shadow:0 1px 2px #000}
-  .cell.hint{box-shadow:inset 0 0 0 4px var(--hintRing)}
-  .cell.hint::before{
-    content:"";position:absolute;top:50%;left:50%;width:30%;aspect-ratio:1/1;
-    transform:translate(-50%,-50%);border-radius:50%;
-    background:var(--hint);opacity:.55;pointer-events:none;
-  }
-  .cell.knight{background:var(--knight)!important}
-  .cell .pc{line-height:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.4));position:relative;z-index:3}
-  aside{background:var(--panel);padding:14px;border-radius:14px;display:flex;
-    flex-direction:column;gap:10px}
-  button{background:#334155;color:var(--ink);border:0;padding:10px 12px;
-    border-radius:8px;cursor:pointer;font-weight:600;transition:background .15s}
-  button:hover{background:#475569}
-  button.primary{background:var(--accent);color:#082f49}
-  button.primary:hover{background:#7dd3fc}
-  button.danger{background:var(--danger)}
-  label{font-size:.85rem;color:var(--muted)}
-  select{background:#334155;color:var(--ink);border:0;padding:8px;border-radius:8px;width:100%}
-  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
-    background:var(--panel);padding:12px 18px;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.4);
-    opacity:0;pointer-events:none;transition:.25s;border-left:4px solid var(--accent)}
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  .toast.win{border-color:var(--hint)} .toast.lose{border-color:var(--danger)}
-  footer{margin-top:14px;color:var(--muted);font-size:.8rem;text-align:center}
-  kbd{background:#334155;padding:1px 6px;border-radius:4px;font-size:.75rem}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <header>
-    <h1>♞ Knight's <span>Tour</span></h1>
-    <div class="stats">
-      <div class="stat">Size<b id="sizeLbl">6×6</b></div>
-      <div class="stat">Move<b id="moveNum">0</b>/<span id="totalLbl">36</span></div>
-      <div class="stat">Time<b id="timer">0:00</b></div>
-      <div class="stat">Best<b id="best">—</b></div>
-    </div>
-  </header>
-
-  <main>
-    <div class="boardWrap">
-      <div id="board" class="board" aria-label="Chess board"></div>
-    </div>
-    <aside>
-      <label for="size">Board size</label>
-      <select id="size">
-        <option value="5">5 × 5  (25 squares)</option>
-        <option value="6" selected>6 × 6  (36 squares)</option>
-        <option value="7">7 × 7  (49 squares)</option>
-        <option value="8">8 × 8  (64 squares)</option>
-        <option value="9">9 × 9  (81 squares)</option>
-        <option value="10">10 × 10 (100 squares)</option>
-      </select>
-
-      <label for="mode">Difficulty (hint mode)</label>
-      <select id="mode">
-        <option value="hints">Easy — show legal moves</option>
-        <option value="warnsdorff">Medium — Warnsdorff order</option>
-        <option value="none">Hard — no hints</option>
-      </select>
-
-      <button id="newBtn" class="primary">New Game</button>
-      <button id="undoBtn">Undo Move</button>
-      <button id="solveBtn">Auto-Solve from Here</button>
-      <button id="resetBest" class="danger">Reset Best (this size)</button>
-      <hr style="border-color:#334155;width:100%"/>
-      <div style="font-size:.82rem;color:var(--muted);line-height:1.5">
-        <b style="color:var(--ink)">How to play</b><br/>
-        Click any square to place the knight, then jump in L-shapes (2+1).
-        Visit every square exactly once to win.
-        <br/><br/>
-        <b style="color:var(--ink)">Keys</b> — <kbd>Z</kbd> undo • <kbd>N</kbd> new
-      </div>
-    </aside>
-  </main>
-  <footer>Self-hosted single-file build • drop into Apache <code>htdocs</code> as <code>index.html</code></footer>
-</div>
-<div id="toast" class="toast"></div>
-
-<script>
 (() => {
   const MIN_N = 5, MAX_N = 10, DEFAULT_N = 6;
-  const SIZE_KEY = 'kt_last_size';     // localStorage key for last-chosen board size
+  const SIZE_KEY = 'kt_last_size';
   const MOVES = [[1,2],[2,1],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1],[-1,2]];
 
   const boardEl   = document.getElementById('board');
@@ -137,7 +19,6 @@
   const idx = (r,c) => r*N+c;
   const bestKey = () => `kt_best_${N}`;
 
-  // Read last-chosen size from localStorage (validated), falling back to default.
   function loadSavedSize(){
     try {
       const raw = localStorage.getItem(SIZE_KEY);
@@ -269,7 +150,7 @@
   function newGame(){
     N = parseInt(sizeSel.value,10);
     if(!Number.isFinite(N) || N<MIN_N || N>MAX_N) N = DEFAULT_N;
-    saveSize(N);                       // persist whichever size we just committed to
+    saveSize(N);
     TOTAL = N*N;
     sizeLbl.textContent = `${N}×${N}`;
     totalLbl.textContent = TOTAL;
@@ -360,17 +241,13 @@
   document.getElementById('resetBest').onclick=()=>{
     localStorage.removeItem(bestKey()); loadBest(); flash(`Best for ${N}×${N} cleared.`);
   };
-  sizeSel.onchange=newGame;            // newGame() also persists the new size
+  sizeSel.onchange=newGame;
   modeSel.onchange=render;
   window.addEventListener('keydown',e=>{
     if(e.key==='z'||e.key==='Z') undo();
     if(e.key==='n'||e.key==='N') newGame();
   });
 
-  // Restore last-chosen size on load (falls back to DEFAULT_N if absent/invalid)
   sizeSel.value = String(loadSavedSize());
   newGame();
 })();
-</script>
-</body>
-</html>

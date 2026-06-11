@@ -4,7 +4,7 @@ A self-contained browser game: guide a knight across a chessboard, visiting ever
 
 ## Play
 
-Open `knights_tour.html` in any modern browser — no server or build step needed.
+Open `index.html` in any modern browser — no server or build step needed.
 
 ## How to play
 
@@ -20,6 +20,14 @@ Open `knights_tour.html` in any modern browser — no server or build step neede
 - **Undo**: step back as far as you like.
 - **Best-time tracking**: per-size best times saved in `localStorage`.
 - **Keyboard shortcuts**: `Z` undo, `N` new game.
+
+## Structure
+
+| File | Purpose |
+|------|---------|
+| `index.html` | HTML structure, links to CSS/JS |
+| `style.css` | All styles |
+| `app.js` | Game logic (IIFE-scoped) |
 
 ## Building / testing
 
