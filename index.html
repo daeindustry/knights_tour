@@ -20,7 +20,7 @@
 
   <main>
     <div class="boardWrap">
-      <div id="board" class="board" aria-label="Chess board"></div>
+      <div id="board" class="board" role="group" aria-label="Chess board"></div>
     </div>
     <aside>
       <label for="size">Board size</label>
@@ -31,8 +31,8 @@
         <option value="8">8 × 8  (64 squares)</option>
         <option value="9">9 × 9  (81 squares)</option>
         <option value="10">10 × 10 (100 squares)</option>
-        <option value="10">11 × 11 (121 squares)</option>
-        <option value="10">12 × 12 (144 squares)</option>
+        <option value="11">11 × 11 (121 squares)</option>
+        <option value="12">12 × 12 (144 squares)</option>
       </select>
 
       <label for="mode">Difficulty (hint mode)</label>
@@ -46,18 +46,19 @@
       <button id="undoBtn">Undo Move</button>
       <button id="solveBtn">Auto-Solve from Here</button>
       <button id="resetBest" class="danger">Reset Best (this size)</button>
+      <button id="themeBtn">Toggle Theme</button>
       <hr style="border-color:#334155;width:100%"/>
       <div style="font-size:.82rem;color:var(--muted);line-height:1.5">
         <b style="color:var(--ink)">How to play</b><br/>
         Click any square to place the knight, then jump in L-shapes (2+1).
         Visit every square exactly once to win.
         <br/><br/>
-        <b style="color:var(--ink)">Keys</b> — <kbd>Z</kbd> undo • <kbd>N</kbd> new
+        <b style="color:var(--ink)">Keys</b> — <kbd>←↑↓→</kbd> focus • <kbd>Enter</kbd>/<kbd>Space</kbd> move • <kbd>Z</kbd> undo • <kbd>N</kbd> new
       </div>
     </aside>
   </main>
 </div>
-<div id="toast" class="toast"></div>
+<div id="toast" class="toast" aria-live="polite"></div>
 
 <script src="app.js"></script>
 </body>

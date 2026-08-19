@@ -1,6 +1,7 @@
 (() => {
-  const MIN_N = 5, MAX_N = 10, DEFAULT_N = 6;
+  const MIN_N = 5, MAX_N = 12, DEFAULT_N = 6;
   const SIZE_KEY = 'kt_last_size';
+  const THEME_KEY = 'kt-theme';
   const MOVES = [[1,2],[2,1],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1],[-1,2]];
 
   const boardEl   = document.getElementById('board');
@@ -12,12 +13,35 @@
   const modeSel   = document.getElementById('mode');
   const sizeSel   = document.getElementById('size');
   const toast     = document.getElementById('toast');
+  const themeBtn  = document.getElementById('themeBtn');
 
   let N, TOTAL, cells, visited, history, knight, startTs, timerId, finished;
+  let focusIdx = 0;
 
   const inBounds = (r,c) => r>=0&&r<N&&c>=0&&c<N;
   const idx = (r,c) => r*N+c;
   const bestKey = () => `kt_best_${N}`;
+  const squareName = (r,c) => String.fromCharCode(97+c) + (r+1);
+
+  function initTheme(){
+    let saved = null;
+    try { saved = localStorage.getItem(THEME_KEY); } catch(_) {}
+    const root = document.documentElement;
+    if (saved === 'light' || saved === 'dark') root.dataset.theme = saved;
+    else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) root.dataset.theme = 'light';
+    updateThemeBtn();
+  }
+  function updateThemeBtn(){
+    if(!themeBtn) return;
+    const dark = document.documentElement.dataset.theme !== 'light';
+    themeBtn.textContent = dark ? '☀️ Light' : '🌙 Dark';
+  }
+  function toggleTheme(){
+    const root = document.documentElement;
+    root.dataset.theme = root.dataset.theme === 'light' ? 'dark' : 'light';
+    try { localStorage.setItem(THEME_KEY, root.dataset.theme); } catch(_) {}
+    updateThemeBtn();
+  }
 
   function loadSavedSize(){
     try {
@@ -40,9 +64,16 @@
       const d=document.createElement('div');
       d.className='cell '+((r+c)%2?'dark':'light');
       d.dataset.r=r; d.dataset.c=c;
+      d.setAttribute('role','button');
+      d.tabIndex = (r===0&&c===0)?0:-1;
       d.addEventListener('click',()=>onClick(r,c));
       boardEl.appendChild(d);
       cells.push(d);
+    }
+    focusIdx = 0;
+    if(cells.length) {
+      for(const el of cells) el.tabIndex=-1;
+      cells[0].tabIndex=0;
     }
     boardEl.style.setProperty('--pieceSize', `clamp(18px, ${(44/N).toFixed(2)}vw, 52px)`);
     boardEl.style.setProperty('--numSize',   `clamp(9px,  ${(14/N).toFixed(2)}vw, 16px)`);
@@ -65,7 +96,34 @@
     return out;
   }
 
+  function labelFor(i, hinted){
+    const r=Math.floor(i/N), c=i%N;
+    let label=squareName(r,c);
+    if(knight && knight[0]===r && knight[1]===c) label+=', current';
+    if(visited[i]) label+=', visited, move '+visited[i];
+    else if(hinted) label+=', valid move';
+    return label;
+  }
+
   function render(){
+    const hinted=new Set();
+    if(knight){
+      const [kr,kc]=knight;
+      if(modeSel.value!=='none' && !finished){
+        const moves=legalFrom(kr,kc);
+        if(modeSel.value==='warnsdorff'){
+          let min=Infinity, best=[];
+          for(const [nr,nc] of moves){
+            const k=legalFrom(nr,nc).length;
+            if(k<min){min=k;best=[[nr,nc]];}
+            else if(k===min) best.push([nr,nc]);
+          }
+          for(const [nr,nc] of best) hinted.add(idx(nr,nc));
+        } else {
+          for(const [nr,nc] of moves) hinted.add(idx(nr,nc));
+        }
+      }
+    }
     for(let i=0;i<TOTAL;i++){
       const el=cells[i];
       el.classList.remove('hint','knight');
@@ -73,38 +131,32 @@
       if(visited[i]){
         el.classList.add('visited');
         const n=document.createElement('span');
-        n.className='num'; n.textContent=visited[i];
+        n.className='num'; n.setAttribute('aria-hidden','true'); n.textContent=visited[i];
         el.appendChild(n);
       } else {
         el.classList.remove('visited');
       }
-    }
-    if(knight){
-      const [r,c]=knight;
-      const el=cells[idx(r,c)];
-      el.classList.add('knight');
-      el.innerHTML='<span class="pc">♞</span>';
-      const mode=modeSel.value;
-      if(mode!=='none' && !finished){
-        const moves=legalFrom(r,c);
-        if(mode==='warnsdorff'){
-          let min=Infinity, best=[];
-          for(const [nr,nc] of moves){
-            const k=legalFrom(nr,nc).length;
-            if(k<min){min=k;best=[[nr,nc]];}
-            else if(k===min) best.push([nr,nc]);
-          }
-          for(const [nr,nc] of best) cells[idx(nr,nc)].classList.add('hint');
-        } else {
-          for(const [nr,nc] of moves) cells[idx(nr,nc)].classList.add('hint');
-        }
+      if(knight && knight[0]===Math.floor(i/N) && knight[1]===i%N){
+        el.classList.add('knight');
+        const p=document.createElement('span');
+        p.className='pc'; p.setAttribute('aria-hidden','true'); p.textContent='♞';
+        el.innerHTML='';
+        el.appendChild(p);
       }
+      if(hinted.has(i)) el.classList.add('hint');
+      el.setAttribute('aria-label', labelFor(i, hinted.has(i)));
     }
     moveNumEl.textContent = history.length;
   }
 
   function onClick(r,c){
     if(finished) return;
+    const i=idx(r,c);
+    if(focusIdx!==i){
+      if(cells[focusIdx]) cells[focusIdx].tabIndex=-1;
+      focusIdx=i;
+      cells[i].tabIndex=0;
+    }
     if(!knight){ placeKnight(r,c); startTimer(); return; }
     const [kr,kc]=knight;
     const ok=legalFrom(kr,kc).some(([a,b])=>a===r&&b===c);
@@ -241,13 +293,37 @@
   document.getElementById('resetBest').onclick=()=>{
     localStorage.removeItem(bestKey()); loadBest(); flash(`Best for ${N}×${N} cleared.`);
   };
+  if(themeBtn) themeBtn.onclick=toggleTheme;
   sizeSel.onchange=newGame;
   modeSel.onchange=render;
+  boardEl.addEventListener('keydown',e=>{
+    const t=e.target;
+    if(!t || !t.classList || !t.classList.contains('cell')) return;
+    const r=Number(t.dataset.r), c=Number(t.dataset.c);
+    let nr=null, nc=null;
+    if(e.key==='ArrowUp') nr=Math.max(0,r-1);
+    else if(e.key==='ArrowDown') nr=Math.min(N-1,r+1);
+    else if(e.key==='ArrowLeft') nc=Math.max(0,c-1);
+    else if(e.key==='ArrowRight') nc=Math.min(N-1,c+1);
+    if(nr!==null){
+      e.preventDefault();
+      cells[focusIdx].tabIndex=-1;
+      focusIdx=nr*N+nc;
+      cells[focusIdx].tabIndex=0;
+      cells[focusIdx].focus();
+      return;
+    }
+    if(e.key==='Enter'||e.key===' '){
+      e.preventDefault();
+      t.click();
+    }
+  });
   window.addEventListener('keydown',e=>{
     if(e.key==='z'||e.key==='Z') undo();
     if(e.key==='n'||e.key==='N') newGame();
   });
 
+  initTheme();
   sizeSel.value = String(loadSavedSize());
   newGame();
 })();
