@@ -2,6 +2,8 @@
 
 A self-contained browser game: guide a knight across a chessboard, visiting every square exactly once.
 
+Repo: [daeindustry/knights_tour](https://github.com/daeindustry/knights_tour)
+
 ## Play
 
 Open `index.html` in any modern browser — no server or build step needed.

@@ -12,7 +12,7 @@ Open `index.html` directly in a browser. No server required.
 
 - Board sizes: 5×5 through 12×12 (default 6×6).
 - State persisted via `localStorage` (`kt_last_size`, `kt_best_<N>`, `kt-theme`).
-- Auto-solver uses Warnsdorff-heuristic DFS, capped at 5M nodes (`app.js:108`).
+- Auto-solver uses Warnsdorff-heuristic DFS, capped at 5M nodes (`autoSolve` in app.js).
 - Keyboard: arrow keys move focus (roving tabindex tracked in `focusIdx`), `Enter`/`Space` move the knight, `Z` = undo, `N` = new game.
 - JS is wrapped in an IIFE for scope isolation.
 - Accessibility: cells are `role="button"` with dynamic `aria-label` (square name + state); knight glyph and move numbers are `aria-hidden`; `#toast` is `aria-live="polite"`. Keep `render()`'s label logic in sync when cell states change.
